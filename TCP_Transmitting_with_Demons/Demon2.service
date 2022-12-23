@@ -1,11 +1,11 @@
 [Unit]
-Description = client demon to accept transmitting information from server
+Description = Client daemon to accept data and send via TCP
 
 [Service]
-RemainAfterExit = false
-ExecStart = /etc/systemd/system/Demon1.service
 Type = simple
 Restart = always
+RemainAfterExit = false
+ExecStart = /home/Bible/client
 
 [Install]
 WantedBy = multi-user.target

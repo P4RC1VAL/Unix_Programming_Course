@@ -1,10 +1,10 @@
 [Unit]
-Description = Publication from TCP service, using functions (pool,select)
+Description = Publication data via shared memory to client
 
 [Service]
-RemainAfterExit = true
-ExecStop = /home/Bible/tpc_server
 Type = oneshot
+RemainAfterExit = true
+ExecStart = /home/Bible/tpc_server
 
 [Install]
 WantedBy = multi-user.target
