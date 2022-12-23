@@ -1,0 +1,10 @@
+[Unit]
+Description = Publication from TCP service, using functions (pool,select)
+
+[Service]
+RemainAfterExit = true
+ExecStop = /home/Bible/tpc_server
+Type = oneshot
+
+[Install]
+WantedBy = multi-user.target
