@@ -1,0 +1,11 @@
+[Unit]
+Description = client demon to accept transmitting information from server
+
+[Service]
+RemainAfterExit = false
+ExecStart = /etc/systemd/system/Demon1.service
+Type = simple
+Restart = always
+
+[Install]
+WantedBy = multi-user.target
