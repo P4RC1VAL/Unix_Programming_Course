@@ -14,60 +14,76 @@
 #include <string.h>
 #include <time.h>
 
-int listenfd = 0;
-struct sockaddr_in serv_addr; 
+void poller(int socketIn, std::string srcIP, int port){
+ struct pollfd fds[2];
+ // Initialize the fds to 0
+ memset(fds, 0, sizeof(fds));
+
+ // Wait in ms before poll times out. -1 for infinite
+ int timeout = 15000;
+
+ fds[0].fd = socketIn;
+
+ while(true){
+  fds[0].events = POLLIN;
+  fds[1].fd = socketOut;
+  fds[1].events = POLLIN;
+
+  if(inWritePending){
+   fds[1].events = POLLOUT;
+   fds[0].events = 0;
+  }
+
+  if(outWritePending){
+   fds[0].events = POLLOUT;
+   if(!inWritePending){
+    fds[1].events = 0;
+   }
+  }
+
 
 int dbg_open()
 {
-    listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(5000);
-    
-    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
-    listen(listenfd, 10);
-    
-    printf("Connected!");
+  if(poll(fds, 2, timeout) > 0){
+   if(fds[0].revents & (POLLNVAL|POLLERR|POLLHUP)){
+    clientdisconnected();
+    break;
+   }
+   
+   if(fds[1].revents & (POLLNVAL|POLLERR|POLLHUP)){
+    serverdisconnected();
+    break;
+   }
 }
 
 
 void dbg_write(const char* msg)
 {
-	int connfd = 0;
-	
-	while(1)
-    {
-        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+	 if(fds[0].revents & POLLIN){
+    clientread();
+    break;
+   }
 
-        write(connfd, msg, strlen(msg));
-
-        close(connfd);
-        sleep(1);
+   if(fds[1].fd!=0 && fds[1].revents & POLLOUT){
+    serverwrite();
+   }
      }
 }
 
 void dbg_read(char* msg)
 {
-    if( connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-       printf("\n Error : Connect Failed \n");
-       return 1;
-    } 
+      if(fds[1].fd!=0 && fds[1].revents & POLLIN){
+    serverread();
+   }
 
-    while ( (n = read(sockfd, msg, sizeof(msg)-1)) > 0)
-    {
-        msg[n] = 0;
-    } 
-
-    if(n < 0)
-    {
-        printf("\n Read error \n");
-    } 
+   if(fds[0].revents & POLLOUT){
+    clientwrite();
+    break;
+   }
 }
 
 void dbg_close()
 {
-	close(listenfd);
+ closeconn();
 }
+
